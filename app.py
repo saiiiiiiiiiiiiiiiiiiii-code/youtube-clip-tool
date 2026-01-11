@@ -13,9 +13,14 @@ def home():
         <input name="url" placeholder="YouTube URL" required><br><br>
         <input name="start" placeholder="Start time (MM:SS)" required><br><br>
         <input name="end" placeholder="End time (MM:SS)" required><br><br>
-        <button type="submit">Download Clip</button>
+        <button type="submit"
+                onclick="this.innerText='Processing... please wait';">
+            Download Clip
+        </button>
     </form>
+    <p>Note: Free server may take 30–60 seconds on first request.</p>
     """
+
 @app.route("/download", methods=["POST"])
 def download():
     try:
@@ -24,31 +29,39 @@ def download():
         end = request.form["end"]
 
         uid = uuid.uuid4().hex
-        temp = f"temp_{uid}.mp4"
-        out = f"clip_{uid}.mp4"
+        temp_file = f"temp_{uid}.mp4"
+        output_file = f"clip_{uid}.mp4"
 
+        # Download video
         subprocess.run(
-            ["yt-dlp", "-f", "bv*+ba/b", "-o", temp, url],
-            check=True
+            ["yt-dlp", "-f", "bv*+ba/b", "-o", temp_file, url],
+            check=True,
+            timeout=120
         )
 
+        # Cut clip (safe re-encode)
         subprocess.run(
             [
                 "ffmpeg",
                 "-y",
                 "-ss", start,
                 "-to", end,
-                "-i", temp,
+                "-i", temp_file,
                 "-c:v", "libx264",
                 "-c:a", "aac",
-                out
+                output_file
             ],
-            check=True
+            check=True,
+            timeout=120
         )
 
-        os.remove(temp)
-        return send_file(out, as_attachment=True)
+        os.remove(temp_file)
+        return send_file(output_file, as_attachment=True)
 
     except Exception as e:
-        return f"ERROR: {str(e)}", 500
+        return f"<h3>Error</h3><pre>{str(e)}</pre>", 500
 
+
+# IMPORTANT:
+# Do NOT put app.run() here.
+# Render uses gunicorn to start the app.
