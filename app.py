@@ -60,8 +60,12 @@ def download():
 
     except Exception as e:
         return f"<h3>Error</h3><pre>{str(e)}</pre>", 500
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
 
 
 # IMPORTANT:
 # Do NOT put app.run() here.
 # Render uses gunicorn to start the app.
+
