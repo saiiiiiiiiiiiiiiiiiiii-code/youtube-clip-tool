@@ -55,6 +55,3 @@ def clip():
     except Exception as e:
         return f"<h3>Error</h3><pre>{str(e)}</pre>", 500
 
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
