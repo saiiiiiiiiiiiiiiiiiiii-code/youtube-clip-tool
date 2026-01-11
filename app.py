@@ -16,43 +16,39 @@ def home():
         <button type="submit">Download Clip</button>
     </form>
     """
-
 @app.route("/download", methods=["POST"])
 def download():
-    url = request.form["url"]
-    start = request.form["start"]
-    end = request.form["end"]
+    try:
+        url = request.form["url"]
+        start = request.form["start"]
+        end = request.form["end"]
 
-    uid = uuid.uuid4().hex
-    temp = f"temp_{uid}.mp4"
-    out = f"clip_{uid}.mp4"
+        uid = uuid.uuid4().hex
+        temp = f"temp_{uid}.mp4"
+        out = f"clip_{uid}.mp4"
 
-    subprocess.run(
-        ["yt-dlp", "-f", "bv*+ba/b", "-o", temp, url],
-        check=True
-    )
+        subprocess.run(
+            ["yt-dlp", "-f", "bv*+ba/b", "-o", temp, url],
+            check=True
+        )
 
-    subprocess.run(
-        [
-            "ffmpeg",
-            "-y",
-            "-ss", start,
-            "-to", end,
-            "-i", temp,
-            "-c:v", "libx264",
-            "-c:a", "aac",
-            out
-        ],
-        check=True
-    )
+        subprocess.run(
+            [
+                "ffmpeg",
+                "-y",
+                "-ss", start,
+                "-to", end,
+                "-i", temp,
+                "-c:v", "libx264",
+                "-c:a", "aac",
+                out
+            ],
+            check=True
+        )
 
-    os.remove(temp)
-    return send_file(out, as_attachment=True)
+        os.remove(temp)
+        return send_file(out, as_attachment=True)
 
-if __name__ == "__main__":
-   if __name__ == "__main__":
-    import os
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-
+    except Exception as e:
+        return f"ERROR: {str(e)}", 500
 
